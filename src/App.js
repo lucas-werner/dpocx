@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./index.css";
-import OpenAI from "openai";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
-
-// Create an instance of the OpenAI client.
-// In production, load your API key from an environment variable.
-const openai = new OpenAI({
-  apiKey: process.env.REACT_APP_API_KEY,
-  dangerouslyAllowBrowser: true,
-});
 
 // Helper function to convert an image URL to a base64 data URL.
 const getDataUrlFromImage = (url) => {
@@ -74,7 +66,6 @@ function Navbar({ selectedPMA, setSelectedPMA }) {
         />
         <span className="app-title">{appTitle}</span>
       </div>
-      {/* Privacy Desk dropdown appears first */}
       <div className="dropdown">
         <button onClick={togglePrivacyDeskDropdown} className="dropdown-button">
           Privacy Desk ▼
@@ -112,6 +103,21 @@ function ChatBox() {
   const [messages, setMessages] = useState([]);
   const [latestAnswer, setLatestAnswer] = useState("");
 
+  // Replace this function to call your backend instead of the OpenAI client directly.
+  const callBackendChat = async (msgs) => {
+    try {
+      const response = await fetch("https://your-app-name.herokuapp.com/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: msgs }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Error calling backend:", error);
+      return null;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!query.trim()) return;
@@ -121,18 +127,19 @@ function ChatBox() {
     setQuery("");
 
     try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: updatedMessages,
-        temperature: 0.7,
-      });
-      if (completion.choices && completion.choices.length > 0) {
+      const completion = await callBackendChat(updatedMessages);
+      if (
+        completion &&
+        completion.choices &&
+        completion.choices.length > 0 &&
+        completion.choices[0].message
+      ) {
         const botMessage = completion.choices[0].message;
         setMessages((prev) => [...prev, botMessage]);
         setLatestAnswer(botMessage.content);
       }
     } catch (error) {
-      console.error("Error calling ChatGPT API:", error);
+      console.error("Error processing chat:", error);
     }
   };
 
@@ -182,7 +189,6 @@ function App() {
     4: "4 – Sensitive data, e.g., health or political affiliation.",
   };
 
-  // Interactive table data for each criterion:
   const dpcTableData = {
     1: [
       { score: "1", description: "Basic score: no aggravating factors." },
@@ -240,7 +246,6 @@ function App() {
     { score: "0.5", description: "Evidence of deliberate action." },
   ];
 
-  // Update final result whenever any score or comment changes.
   useEffect(() => {
     const dpcVal = parseFloat(dpc);
     const eiVal = parseFloat(ei);
@@ -272,31 +277,40 @@ function App() {
         "Ease of Identification (EI)": {
           option: ei,
           score: ei,
-          description: eiTableData.find((item) => item.score === ei)?.description || "",
+          description:
+            eiTableData.find((item) => item.score === ei)?.description || "",
           comment: eiText,
         },
         "Loss of Confidentiality": {
           option: confidentiality,
           score: confidentiality,
-          description: confTableData.find((item) => item.score === confidentiality)?.description || "",
+          description:
+            confTableData.find((item) => item.score === confidentiality)
+              ?.description || "",
           comment: confText,
         },
         "Loss of Integrity": {
           option: integrity,
           score: integrity,
-          description: integrityTableData.find((item) => item.score === integrity)?.description || "",
+          description:
+            integrityTableData.find((item) => item.score === integrity)
+              ?.description || "",
           comment: integrityText,
         },
         "Loss of Availability": {
           option: availability,
           score: availability,
-          description: availTableData.find((item) => item.score === availability)?.description || "",
+          description:
+            availTableData.find((item) => item.score === availability)
+              ?.description || "",
           comment: availText,
         },
         "Malicious Intent": {
           option: malicious,
           score: malicious,
-          description: maliciousTableData.find((item) => item.score === malicious)?.description || "",
+          description:
+            maliciousTableData.find((item) => item.score === malicious)
+              ?.description || "",
           comment: maliciousText,
         },
       },
@@ -325,7 +339,6 @@ function App() {
     return "black";
   };
 
-  // Final risk summary table rows (without the "Selected Option" column)
   const summaryTableRows = result
     ? Object.entries(result.breakdown).map(([key, value]) => (
         <tr key={key}>
@@ -337,7 +350,6 @@ function App() {
       ))
     : null;
 
-  // Helper to render an interactive table given data and current selected value.
   const renderInteractiveTable = (dataArray, currentValue, setValue) => {
     return (
       <div className="dpc-table">
@@ -367,20 +379,16 @@ function App() {
 
   const generatePDF = async () => {
     const doc = new jsPDF();
-    // Get the company logo as a data URL (using the provided SVG URL)
     const logoUrl =
       "https://www.dpoconsultancy.com/wp-content/uploads/2024/03/DPO_logo.svg";
     try {
       const logoDataUrl = await getDataUrlFromImage(logoUrl);
-      // Add the logo at top-left: x=10, y=10, width=50, height=20
       doc.addImage(logoDataUrl, "PNG", 10, 10, 50, 20);
     } catch (error) {
       console.error("Error loading logo:", error);
     }
     doc.setFontSize(16);
-    // Adjust text position below the logo
     doc.text("Risk Summary Report", 14, 40);
-    // Add the final risk summary table from the element with id 'final-risk-table'
     doc.autoTable({ html: "#final-risk-table", startY: 50 });
     doc.save("Risk_Summary_Report.pdf");
   };
@@ -388,7 +396,6 @@ function App() {
   return (
     <div className="container">
       <Navbar selectedPMA={selectedPMA} setSelectedPMA={setSelectedPMA} />
-      {/* Description and instructions before chatbot */}
       <div className="description-container">
         <p>
           How it works: First, describe the data breach to DPOCx by entering your details above.
