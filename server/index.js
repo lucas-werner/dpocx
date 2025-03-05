@@ -4,6 +4,13 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const app = express();
+const cors = require("cors");
+
+// Allow requests from your GitHub Pages domain
+app.use(cors({
+  origin: "https://lucas-werner.github.io"
+}));
+
 app.use(express.json());
 
 app.post("/api/chat", async (req, res) => {

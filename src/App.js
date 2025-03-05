@@ -106,7 +106,7 @@ function ChatBox() {
   // Replace this function to call your backend instead of the OpenAI client directly.
   const callBackendChat = async (msgs) => {
     try {
-      const response = await fetch("https://dpocx-6f40553697c2.herokuapp.com/", {
+      const response = await fetch("https://dpocx-6f40553697c2.herokuapp.com/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: msgs }),
