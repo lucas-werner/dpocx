@@ -24,7 +24,7 @@ app.post("/api/chat", async (req, res) => {
       {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.REACT_APP_API_KEY}`
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
           // Optionally, if your organization or project requires additional headers:
           // "OpenAI-Organization": "org-yourOrgID",
           // "OpenAI-Project": "yourProjectID"
