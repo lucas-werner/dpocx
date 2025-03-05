@@ -13,6 +13,9 @@ app.use(cors({
 
 app.use(express.json());
 
+
+
+
 app.post("/api/chat", async (req, res) => {
   try {
     // Example payload – adjust as needed based on your documentation.
@@ -21,6 +24,9 @@ app.post("/api/chat", async (req, res) => {
       messages: req.body.messages, // e.g. [{ role: "user", content: "Say this is a test!" }]
       temperature: 0.7
     };
+    console.log(payload)
+
+    console.log(process.env.OPENAI_API_KEY)
 
     // Make the API request to OpenAI. Note that the API documentation
     // specifies that the request must include an Authorization header
